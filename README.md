@@ -10,6 +10,83 @@ The source code is released under a BSD 3-Clause license.
 - **Author**: Jaeyoung Lim
 - **Affiliation**: Autonomous Systems Lab, ETH Zurich
 
+## 修改成MAVROS通訊機制
+### 使用方式
+1. Requirements：ROS2 Humble [Ubuntu (deb packages) — ROS 2 Documentation: Humble documentation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html)
+2. 建置ROS APP  
+    設定ROS環境變數
+    ```
+    source /opt/ros/humble/setup.bash
+    ```
+    開始build
+    ```
+    cd px4_offboard
+    colcon build --packages-select px4_offboard --symlink-install
+    ```
+3. 運行ROS node  
+    設定ROS APP環境變數
+    ```
+    source install/setup.bash
+    ```
+    運行ROS node
+    ```
+    ros2 launch px4_offboard offboard_position_control_mavros_auto.launch.py
+    ```
+
+### Laptop + MTK edge computer + X-Plane demo使用方式
+1. Requirements：MAVROS
+2. WSL Networking設定: 開啟WSL Settings
+    1. 設定網路模式(networkingMode)為Mirrored:  
+    網路功能 > 網路模式 > 選擇Mirrored
+    2. 設定主機位址回送(hostAddressLoopback)功能:  
+    網路功能 > 主機位址回送 > 開啟
+    3. 允許Hyper-V防火牆:  
+        Powershell執行
+        ```
+        Set-NetFirewallHyperVVMSetting -Name '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}' -DefaultInboundAction Allow
+        ```
+3. Windows防火牆設定
+    1. 開啟「具有進階安全性的Windows Defender防火牆」
+    2. 新增規則
+    3. 規則類型：選擇「連接埠」
+    4. 通訊協定及連接埠：選擇UDP；特定本機連接埠14500-14599
+    5. 動作：允許連線
+    6. 設定檔：所有
+    7. 名稱：自訂
+4. 在運行px4xplane的電腦上(在同一個網路)
+    1. 開啟X-Plane
+    2. 執行px4xplane隨附的PX4(記得指定正確的機型)
+        ```
+        cd PX4-Autopilot-Me
+        make px4_sitl xplane_alia250
+        ```
+5. 在MTK邊緣裝置上(在同一個網路)
+    1. 在一個terminal開啟MAVROS node
+        ```
+        source configure_ros_dds.sh
+        ros2 launch mavros px4.launch fcu_url:=udp://:14540@<PX4_HOST_IP>:14580
+        
+        # PX4_HOST_IP：運行px4xplane的IP
+        ```
+    2. 開新的terminal運行px4-offboard node
+        ```
+        source configure_ros_dds.sh
+        ros2 launch px4_offboard offboard_position_control_mavros_auto.launch.py
+        ```
+    3. 執行接收GCS指令的Python script (待更新)
+        ```
+        source configure_ros_dds.sh
+        python3 plane_control_node_v4_custom.py
+        ```
+6. 在Laptop上(在同一個網路)
+    1. 執行地面站的Python script (待更新)
+        ```
+        source configure_ros_dds.sh
+        python3 gcs_tui_v2.py
+        ```
+7. 設定無人機開始繞圈飛行：
+    無人機arm並設定為offboard模式之後，將會開始繞圈飛行。需要在Laptop上執行`gcs_tui_v2.py`的terminal，按"a" + Enter解鎖，再按"m" + Enter進入offboard模式。
+
 ## Setup
 Add the repository to the ros2 workspace
 ```
