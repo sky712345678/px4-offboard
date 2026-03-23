@@ -158,20 +158,20 @@ The source code is released under a BSD 3-Clause license.
         ```
         其餘部分：沿用模板
     2. 將檔案放至路徑：`"PX4-Autopilot-Me/ROMFS/px4fmu_common/init.d-posix/airframes"`
-    3. 重新編譯PX4：
-        ```bash
-        cd PX4-Autopilot-Me
-        rm -r build
-        make clean
+3. 重新編譯PX4：
+    ```bash
+    cd PX4-Autopilot-Me
+    rm -r build
+    make clean
 
-        make px4_sitl_default
-        ```
-        剛剛修改的ROMFS配置檔案應該會出現在`"X4-Autopilot-Me/build/px4_sitl_default/rootfs/etc/init.d-posix/airframes"`裡面。
-    4. PX4執行(使用修改的ROMFS配置檔案)：
-        ```bash
-        PX4_SYS_AUTOSTART=<AIRFRAME_ID> make px4_sitl_default none
-        ```
-        `AIRFRAME_ID`：配置檔案的前綴數字，例如`22001_xplane_fly_wing`就是填`22001`
+    make px4_sitl_default
+    ```
+    剛剛修改的ROMFS配置檔案應該會出現在`"PX4-Autopilot-Me/build/px4_sitl_default/rootfs/etc/init.d-posix/airframes"`裡面。
+4. PX4執行(使用修改的ROMFS配置檔案)：
+    ```bash
+    PX4_SYS_AUTOSTART=<AIRFRAME_ID> make px4_sitl_default none
+    ```
+    `AIRFRAME_ID`：配置檔案的前綴數字，例如`22001_xplane_fly_wing`就是填`22001`
 
 ## Setup
 Add the repository to the ros2 workspace
