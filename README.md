@@ -101,41 +101,43 @@ The source code is released under a BSD 3-Clause license.
     ```
 
 ## px4xplane設定新機型
-1. 編輯`config.ini`  
-    參考檔案：`config.ini`
-    設定機型名稱：
-    ```
-    [FixedWing_DualMotor]
-    ```
-    設定引擎、舵面的DataRef：  
-    - 格式：`channel{n} = {DataRef_name}, {data_type}, {index}, {range}`
-    - `{n}`: 自己指定(之後跟PX4的參數對應就好)
-    - `{DataRef_name}`: 引擎/舵面，PX4給DataRef值，X-Plane會做出相應的反應。  
-        要找到有反應的DataRef，使用X-Plane安裝資料夾裡面的Plane Maker，找到哪些wing編號有功能，搭配DataRefTool去嘗試哪個DataRef有反應。  
-        例如：Plane Maker > 上排選單 > Standard > Wings裡面顯示Wing 2有功能，再用DataRefTool搜尋wing2，找到有反應的DataRef name。
-    - DataRef設定可以透過"|"符號串聯，被串的DataRef值會保持一致
-    ```
-    ; Enable auto prop brakes on X-Plane engines #1 and #2 (indices 0,1)
-    autoPropBrakes = 0, 1
+1. 修改`config.ini`
+    1. 撰寫檔案
+        參考檔案：`config.ini`
+        設定機型名稱：
+        ```
+        [FixedWing_DualMotor]
+        ```
+        設定引擎、舵面的DataRef：  
+        - 格式：`channel{n} = {DataRef_name}, {data_type}, {index}, {range}`
+        - `{n}`: 自己指定(之後跟PX4的參數對應就好)
+        - `{DataRef_name}`: 引擎/舵面，PX4給DataRef值，X-Plane會做出相應的反應。  
+            要找到有反應的DataRef，使用X-Plane安裝資料夾裡面的Plane Maker，找到哪些wing編號有功能，搭配DataRefTool去嘗試哪個DataRef有反應。  
+            例如：Plane Maker > 上排選單 > Standard > Wings裡面顯示Wing 2有功能，再用DataRefTool搜尋wing2，找到有反應的DataRef name。
+        - DataRef設定可以透過"|"符號串聯，被串的DataRef值會保持一致
+        ```
+        ; Enable auto prop brakes on X-Plane engines #1 and #2 (indices 0,1)
+        autoPropBrakes = 0, 1
 
-    ; Motors (PX4 channels -> X-Plane engine indices)
-    ; Use ENGN_thro_use as floatArray per px4xplane docs
-    channel0 = sim/flightmodel/engine/ENGN_thro_use, floatArray, [0], [-1 1]   ; Motor 1
-    channel1 = sim/flightmodel/engine/ENGN_thro_use, floatArray, [1], [-1 1]   ; Motor 2
+        ; Motors (PX4 channels -> X-Plane engine indices)
+        ; Use ENGN_thro_use as floatArray per px4xplane docs
+        channel0 = sim/flightmodel/engine/ENGN_thro_use, floatArray, [0], [-1 1]   ; Motor 1
+        channel1 = sim/flightmodel/engine/ENGN_thro_use, floatArray, [1], [-1 1]   ; Motor 2
 
-    ; Ailerons (Wing2)
-    channel2 = sim/flightmodel/controls/wing2l_ail1def, float, 0, [-10 10]     ; Left aileron
-    channel3 = sim/flightmodel/controls/wing2r_ail1def, float, 0, [-10 10]     ; Right aileron
+        ; Ailerons (Wing2)
+        channel2 = sim/flightmodel/controls/wing2l_ail1def, float, 0, [-10 10]     ; Left aileron
+        channel3 = sim/flightmodel/controls/wing2r_ail1def, float, 0, [-10 10]     ; Right aileron
 
-    ; Elevator (Wing3) - drive both L/R from one PX4 channel (symmetric deflection)
-    channel4 = sim/flightmodel/controls/wing3l_elv1def, float, 0, [10 -10] | sim/flightmodel/controls/wing3r_elv1def, float, 0, [10 -10]
+        ; Elevator (Wing3) - drive both L/R from one PX4 channel (symmetric deflection)
+        channel4 = sim/flightmodel/controls/wing3l_elv1def, float, 0, [10 -10] | sim/flightmodel/controls/wing3r_elv1def, float, 0, [10 -10]
 
-    ; Drag Rudders / Yaw Brakes (Wing3) - left/right split
-    ; X-Plane uses yawbrake defs (yawbdef). These provide yawing via drag.
-    channel5 = sim/flightmodel/controls/wing3l_yawbdef, float, 0, [0 30]       ; Left rudder
-    channel6 = sim/flightmodel/controls/wing3r_yawbdef, float, 0, [0 30]       ; Right rudder
-    ```
-    參考資料：[px4xplane/docs/custom-airframe-config.md at master · alireza787b/px4xplane](https://github.com/alireza787b/px4xplane/blob/master/docs/custom-airframe-config.md)
+        ; Drag Rudders / Yaw Brakes (Wing3) - left/right split
+        ; X-Plane uses yawbrake defs (yawbdef). These provide yawing via drag.
+        channel5 = sim/flightmodel/controls/wing3l_yawbdef, float, 0, [0 30]       ; Left rudder
+        channel6 = sim/flightmodel/controls/wing3r_yawbdef, float, 0, [0 30]       ; Right rudder
+        ```
+        參考資料：[px4xplane/docs/custom-airframe-config.md at master · alireza787b/px4xplane](https://github.com/alireza787b/px4xplane/blob/master/docs/custom-airframe-config.md)
+    2. 將檔案放至px4xplane的資料夾底下，例如：`"X-Plane 12/Resources/plugins/"`
 2. 修改ROMFS配置檔案  
     1. 撰寫檔案  
         參考檔案：`22001_xplane_fly_wing`  
