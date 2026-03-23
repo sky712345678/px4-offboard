@@ -15,21 +15,21 @@ The source code is released under a BSD 3-Clause license.
 1. Requirements：ROS2 Humble [Ubuntu (deb packages) — ROS 2 Documentation: Humble documentation](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html)
 2. 建置ROS APP  
     設定ROS環境變數
-    ```
+    ```bash
     source /opt/ros/humble/setup.bash
     ```
     開始build
-    ```
+    ```bash
     cd px4_offboard
     colcon build --packages-select px4_offboard --symlink-install
     ```
 3. 運行ROS node  
     設定ROS APP環境變數
-    ```
+    ```bash
     source install/setup.bash
     ```
     運行ROS node
-    ```
+    ```bash
     ros2 launch px4_offboard offboard_position_control_mavros_auto.launch.py
     ```
 
@@ -42,7 +42,7 @@ The source code is released under a BSD 3-Clause license.
     網路功能 > 主機位址回送 > 開啟
     3. 允許Hyper-V防火牆:  
         Powershell執行
-        ```
+        ```bash
         Set-NetFirewallHyperVVMSetting -Name '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}' -DefaultInboundAction Allow
         ```
 3. Windows防火牆設定
@@ -56,36 +56,122 @@ The source code is released under a BSD 3-Clause license.
 4. 在運行px4xplane的電腦上(在同一個網路)
     1. 開啟X-Plane
     2. 執行px4xplane隨附的PX4(記得指定正確的機型)
-        ```
+        ```bash
         cd PX4-Autopilot-Me
         make px4_sitl xplane_alia250
         ```
+    3. px4xplane puglin連線至SITL
 5. 在MTK邊緣裝置上(在同一個網路)
     1. 在一個terminal開啟MAVROS node
-        ```
+        ```bash
         source configure_ros_dds.sh
         ros2 launch mavros px4.launch fcu_url:=udp://:14540@<PX4_HOST_IP>:14580
         
         # PX4_HOST_IP：運行px4xplane的IP
         ```
+        補充：所有運行ROS的terminal都需要跑過`configure_ros_dds.sh`，這是用來設定ROS通訊的變數
     2. 開新的terminal運行px4-offboard node
-        ```
+        ```bash
         source configure_ros_dds.sh
         ros2 launch px4_offboard offboard_position_control_mavros_auto.launch.py
         ```
-    3. 執行接收GCS指令的Python script (待更新)
-        ```
+    3. 執行接收GCS指令的Python script
+        ```bash
         source configure_ros_dds.sh
         python3 plane_control_node_v4_custom.py
         ```
 6. 在Laptop上(在同一個網路)
-    1. 執行地面站的Python script (待更新)
-        ```
+    1. 執行地面站的Python script
+        ```bash
         source configure_ros_dds.sh
         python3 gcs_tui_v2.py
         ```
 7. 設定無人機開始繞圈飛行：
-    無人機arm並設定為offboard模式之後，將會開始繞圈飛行。需要在Laptop上執行`gcs_tui_v2.py`的terminal，按"a" + Enter解鎖，再按"m" + Enter進入offboard模式。
+    無人機arm並設定為offboard模式之後，將會開始繞圈飛行。  
+    需要在Laptop上執行`gcs_tui_v2.py`的terminal，按"a" + Enter解鎖，再按"m" + Enter進入offboard模式。  
+    補充可用之指令：
+    ```python
+    '=== PX4 Plane GCS TUI v2 ==='
+    'a=ARM  z=DISARM  t=TAKEOFF'
+    'r=ROLL+10  l=ROLL-10  o=ROLL OFF'
+    'u=PITCH+10  d=PITCH-10  p=PITCH OFF'
+    '1=THR 30%  2=THR 50%  3=THR 70%'
+    '+=THR UP  -=THR DOWN  0=THR OFF'
+    'm=OFFBOARD  q=QUIT'
+    ```
+
+## px4xplane設定新機型
+1. 編輯`config.ini`  
+    參考檔案：`config.ini`
+    設定機型名稱：
+    ```
+    [FixedWing_DualMotor]
+    ```
+    設定引擎、舵面的DataRef：  
+    - 格式：`channel{n} = {DataRef_name}, {data_type}, {index}, {range}`
+    - `{n}`: 自己指定(之後跟PX4的參數對應就好)
+    - `{DataRef_name}`: 引擎/舵面，PX4給DataRef值，X-Plane會做出相應的反應。  
+        要找到有反應的DataRef，使用X-Plane安裝資料夾裡面的Plane Maker，找到哪些wing編號有功能，搭配DataRefTool去嘗試哪個DataRef有反應。  
+        例如：Plane Maker > 上排選單 > Standard > Wings裡面顯示Wing 2有功能，再用DataRefTool搜尋wing2，找到有反應的DataRef name。
+    - DataRef設定可以透過"|"符號串聯，被串的DataRef值會保持一致
+    ```
+    ; Enable auto prop brakes on X-Plane engines #1 and #2 (indices 0,1)
+    autoPropBrakes = 0, 1
+
+    ; Motors (PX4 channels -> X-Plane engine indices)
+    ; Use ENGN_thro_use as floatArray per px4xplane docs
+    channel0 = sim/flightmodel/engine/ENGN_thro_use, floatArray, [0], [-1 1]   ; Motor 1
+    channel1 = sim/flightmodel/engine/ENGN_thro_use, floatArray, [1], [-1 1]   ; Motor 2
+
+    ; Ailerons (Wing2)
+    channel2 = sim/flightmodel/controls/wing2l_ail1def, float, 0, [-10 10]     ; Left aileron
+    channel3 = sim/flightmodel/controls/wing2r_ail1def, float, 0, [-10 10]     ; Right aileron
+
+    ; Elevator (Wing3) - drive both L/R from one PX4 channel (symmetric deflection)
+    channel4 = sim/flightmodel/controls/wing3l_elv1def, float, 0, [10 -10] | sim/flightmodel/controls/wing3r_elv1def, float, 0, [10 -10]
+
+    ; Drag Rudders / Yaw Brakes (Wing3) - left/right split
+    ; X-Plane uses yawbrake defs (yawbdef). These provide yawing via drag.
+    channel5 = sim/flightmodel/controls/wing3l_yawbdef, float, 0, [0 30]       ; Left rudder
+    channel6 = sim/flightmodel/controls/wing3r_yawbdef, float, 0, [0 30]       ; Right rudder
+    ```
+    參考資料：[px4xplane/docs/custom-airframe-config.md at master · alireza787b/px4xplane](https://github.com/alireza787b/px4xplane/blob/master/docs/custom-airframe-config.md)
+2. 修改ROMFS配置檔案  
+    1. 撰寫檔案  
+        參考檔案：`22001_xplane_fly_wing`  
+        通訊設定：
+        - 格式：`param set-default PWM_MAIN_FUNC{m} {id}`
+        - {m}：與`config.ini`的`channel{n}`對應，`m == n+1`、`m+1 == n+2`、依此類推
+        - {id}：UAVCAN Motor Parameters - PCA9685_FUNC10。`101-112`為motors、`201-208`為servos，多個motor與servo只要id不重複就好，順序不影響。參考資料：[Parameter Reference | PX4 User Guide (v1.13)](https://docs.px4.io/v1.13/en/advanced_config/parameter_reference.html)
+        ```bash
+        # PWM Output Mapping
+        # (Order matters for px4xplane channel mapping)
+        # MAIN1..2: Ailerons, MAIN3: Elevator, MAIN4..5: Motors, MAIN6..7: Yawbrakes
+        param set-default PWM_MAIN_FUNC1 101   # Motor 1 (X-Plane engine #1)
+        param set-default PWM_MAIN_FUNC2 102   # Motor 2 (X-Plane engine #2)
+        param set-default PWM_MAIN_FUNC3 201   # Left aileron
+        param set-default PWM_MAIN_FUNC4 202   # Right aileron
+        param set-default PWM_MAIN_FUNC5 203   # Elevator (single)
+        param set-default PWM_MAIN_FUNC6 204   # Left rudder  (use spoiler func-id as generic)
+        param set-default PWM_MAIN_FUNC7 205   # Right rudder (use spoiler func-id as generic)
+        param set-default PWM_MAIN_REV   0
+        ```
+        其餘部分：沿用模板
+    2. 將檔案放至路徑：`"PX4-Autopilot-Me/ROMFS/px4fmu_common/init.d-posix/airframes"`
+    3. 重新編譯PX4：
+        ```bash
+        cd PX4-Autopilot-Me
+        rm -r build
+        make clean
+
+        make px4_sitl_default
+        ```
+        剛剛修改的ROMFS配置檔案應該會出現在`"X4-Autopilot-Me/build/px4_sitl_default/rootfs/etc/init.d-posix/airframes"`裡面。
+    4. PX4執行(使用修改的ROMFS配置檔案)：
+        ```bash
+        PX4_SYS_AUTOSTART=<AIRFRAME_ID> make px4_sitl_default none
+        ```
+        `AIRFRAME_ID`：配置檔案的前綴數字，例如`22001_xplane_fly_wing`就是填`22001`
 
 ## Setup
 Add the repository to the ros2 workspace

@@ -116,7 +116,7 @@ class PlaneControlNode(Node):
         self.mode_client = self.create_client(SetMode, '/mavros/set_mode')
 
         # Timers
-        self.create_timer(0.2, self.publish_telemetry)   # 5 Hz UI
+        # self.create_timer(0.2, self.publish_telemetry)   # 5 Hz UI
         self.create_timer(0.05, self.control_loop)       # 20 Hz setpoint
 
         self.get_logger().info('plane_control_node_v4 started')
@@ -331,7 +331,7 @@ class PlaneControlNode(Node):
     def control_loop(self):
         should_stream = (
             self.offboard_request_pending
-            or self.mode == 'OFFBOARD'
+            # or self.mode == 'OFFBOARD'
             or self.roll_hold_enabled
             or self.pitch_hold_enabled
             or self.throttle_hold_enabled
@@ -381,7 +381,7 @@ class PlaneControlNode(Node):
         self.cmd_yaw_deg = cmd_yaw
         self.cmd_throttle = cmd_throttle
 
-        self.publish_attitude_target(cmd_roll, cmd_pitch, cmd_yaw, cmd_throttle)
+        self.publish_attitude_target(0, 0, 0, cmd_throttle)
         
         if self.offboard_request_pending:
             self.offboard_warmup_counter += 1
